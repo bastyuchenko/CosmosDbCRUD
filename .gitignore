@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/CosmosDbCRUD/bin/Debug
+/CosmosDbCRUD/packages
+/CosmosDbCRUD/obj/Debug
+/CosmosDbCRUD/.vs/CosmosDbCRUD/v15/Server/sqlite3
+/CosmosDbCRUD/.vs/CosmosDbCRUD/v15
