@@ -9,7 +9,7 @@ namespace CosmosDbCRUD
     public interface ICommonDocument
     {
         string Id { get; set; }
-        
+
         string DeviceId { get; set; }
 
         DateTime ReadingTime { get; set; }

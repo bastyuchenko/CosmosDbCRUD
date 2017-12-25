@@ -11,7 +11,7 @@ namespace CosmosDbCRUD
         Task CreateItems();
         Task DeleteItem(string documentId, object partitionValue);
         Task<ICommonDocument> ReadItem(string documentId);
-        List<ICommonDocument> ReadItemCollectionAcrossAllPartition();
+        List<ICommonDocument> ReadItemCollection();
         List<ICommonDocument> ReadItemCollectionInPartition();
         List<ICommonDocument> ReadItemCollectionParallelQuery();
         Task UpdateItem(ICommonDocument reading, string documentId);

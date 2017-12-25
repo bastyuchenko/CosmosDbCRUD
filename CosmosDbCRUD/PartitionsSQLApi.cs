@@ -32,7 +32,7 @@ namespace CosmosDbCRUD
             {
                 await client.CreateDocumentAsync(
                 UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName),
-                    new DeviceReading
+                    new SQLDeviceReading
                     {
                         Id = $"XMS-001-FE2{i}C",
                         DeviceId = PartitionValue1,
@@ -47,7 +47,7 @@ namespace CosmosDbCRUD
             {
                 await client.CreateDocumentAsync(
                 UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName),
-                    new DeviceReading
+                    new SQLDeviceReading
                     {
                         Id = $"XMS-002-FE2{i}C",
                         DeviceId = PartitionValue2,
@@ -78,9 +78,9 @@ namespace CosmosDbCRUD
         public async Task<ICommonDocument> ReadItem(string documentId)
         {
             Document result = await client.ReadDocumentAsync(
-                UriFactory.CreateDocumentUri(DatabaseName, DocumentCollectionName, documentId),
+                UriFactory.CreateDocumentUri(DatabaseName, DocumentCollectionName, (string)documentId),
                 new RequestOptions { PartitionKey = new PartitionKey(PartitionValue1) });
-            return (DeviceReading)(dynamic)result;
+            return (SQLDeviceReading)(dynamic)result;
         }
 
         public async Task UpdateItem(ICommonDocument reading, string documentId)
@@ -97,13 +97,13 @@ namespace CosmosDbCRUD
         {
             // Delete a document. The partition key is required.
             await client.DeleteDocumentAsync(
-            UriFactory.CreateDocumentUri(DatabaseName, DocumentCollectionName, documentId),
+            UriFactory.CreateDocumentUri(DatabaseName, DocumentCollectionName, (string)documentId),
             new RequestOptions { PartitionKey = new PartitionKey(partitionValue) });
         }
 
         public List<ICommonDocument> ReadItemCollectionInPartition()
         {
-            IQueryable<ICommonDocument> query = client.CreateDocumentQuery<DeviceReading>(
+            IQueryable<ICommonDocument> query = client.CreateDocumentQuery<SQLDeviceReading>(
                 UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName))
                 .Where(m => m.MetricType == "Temperature" && m.DeviceId == PartitionValue1);
             return query.ToList();
@@ -112,7 +112,7 @@ namespace CosmosDbCRUD
         public List<ICommonDocument> ReadItemCollectionParallelQuery()
         {
             // Cross-partition Order By queries
-            IQueryable<ICommonDocument> crossPartitionQuery = client.CreateDocumentQuery<DeviceReading>(
+            IQueryable<ICommonDocument> crossPartitionQuery = client.CreateDocumentQuery<SQLDeviceReading>(
             UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName),
             new FeedOptions
             {
@@ -126,9 +126,9 @@ namespace CosmosDbCRUD
             return crossPartitionQuery.ToList();
         }
 
-        public List<ICommonDocument> ReadItemCollectionAcrossAllPartition()
+        public List<ICommonDocument> ReadItemCollection()
         {
-            IQueryable<ICommonDocument> crossPartitionQuery = client.CreateDocumentQuery<DeviceReading>(
+            IQueryable<ICommonDocument> crossPartitionQuery = client.CreateDocumentQuery<SQLDeviceReading>(
                 UriFactory.CreateDocumentCollectionUri(DatabaseName, DocumentCollectionName),
                 new FeedOptions { EnableCrossPartitionQuery = true })
                 .Where(m => m.MetricType == "Temperature" && m.MetricValue > 100);
@@ -138,28 +138,6 @@ namespace CosmosDbCRUD
         public void Dispose()
         {
             client.Dispose();
-        }
-
-        public class DeviceReading : ICommonDocument
-        {
-            [JsonProperty("id")]
-            public string Id { get; set; }
-
-            [JsonProperty("deviceId")]
-            public string DeviceId { get; set; }
-
-            [JsonConverter(typeof(IsoDateTimeConverter))]
-            [JsonProperty("readingTime")]
-            public DateTime ReadingTime { get; set; }
-
-            [JsonProperty("metricType")]
-            public string MetricType { get; set; }
-
-            [JsonProperty("unit")]
-            public string Unit { get; set; }
-
-            [JsonProperty("metricValue")]
-            public double MetricValue { get; set; }
         }
     }
 }
