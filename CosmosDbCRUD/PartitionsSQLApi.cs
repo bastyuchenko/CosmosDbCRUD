@@ -83,13 +83,13 @@ namespace CosmosDbCRUD
             return (SQLDeviceReading)(dynamic)result;
         }
 
-        public async Task UpdateItem(ICommonDocument reading, string documentId)
+        public async Task UpdateItem(ICommonDocument reading)
         {
             // Update the document. Partition key is not required, again extracted from the document
             reading.MetricValue = 104;
             reading.ReadingTime = DateTime.UtcNow;
             await client.ReplaceDocumentAsync(
-            UriFactory.CreateDocumentUri(DatabaseName, DocumentCollectionName, documentId), reading, 
+            UriFactory.CreateDocumentUri(DatabaseName, DocumentCollectionName, reading.Id), reading, 
             new RequestOptions { PartitionKey = new PartitionKey(PartitionValue1) });
         }
 

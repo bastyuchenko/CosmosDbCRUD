@@ -14,6 +14,6 @@ namespace CosmosDbCRUD
         List<ICommonDocument> ReadItemCollection();
         List<ICommonDocument> ReadItemCollectionInPartition();
         List<ICommonDocument> ReadItemCollectionParallelQuery();
-        Task UpdateItem(ICommonDocument reading, string documentId);
+        Task UpdateItem(ICommonDocument reading);
     }
 }

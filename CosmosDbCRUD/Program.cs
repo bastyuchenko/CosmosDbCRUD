@@ -30,9 +30,16 @@ namespace CosmosDbCRUD
                 Console.WriteLine(doc.MetricValue);
 
                 var result = sqlApi.ReadItemCollection();
+
                 foreach (var item in result)
                 {
-                    Console.WriteLine(item.Id);
+                    Console.WriteLine($"Update {item.Id}");
+                    await sqlApi.DeleteItem(item.Id, item.DeviceId);
+                }
+
+                foreach (var item in result)
+                {
+                    Console.WriteLine($"Delete {item.Id}");
                     await sqlApi.DeleteItem(item.Id, item.DeviceId);
                 }
             }
@@ -45,14 +52,21 @@ namespace CosmosDbCRUD
                 ////await sqlApi.CreateDatabase();
                 ////await sqlApi.CreateCollection();
                 await sqlApi.CreateItems();
-                ////ICommonDocument doc = await sqlApi.ReadItem("XMS-001-FE24C");
-                ////Console.WriteLine(doc.MetricValue);
+                ICommonDocument doc = await sqlApi.ReadItem("XMS-001-FE24C");
+                Console.WriteLine(doc.MetricValue);
 
                 var result = sqlApi.ReadItemCollection();
+
                 foreach (var item in result)
                 {
-                    Console.WriteLine(item.Id);
-                    await sqlApi.DeleteItem(item.Id, null);
+                    Console.WriteLine($"Update {item.Id}");
+                    await sqlApi.DeleteItem(item.Id, item.DeviceId);
+                }
+
+                foreach (var item in result)
+                {
+                    Console.WriteLine($"Delete {item.Id}");
+                    await sqlApi.DeleteItem(item.Id, item.DeviceId);
                 }
             }
         }

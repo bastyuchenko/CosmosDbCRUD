@@ -38,7 +38,8 @@ namespace CosmosDbCRUD
             try
             {
                 var collection = GetTasksCollection();
-                return collection.Find(new BsonDocument()).ToList().Select<MONGODeviceReading,ICommonDocument>(x=>(ICommonDocument)x).ToList();
+                //return collection.Find(new BsonDocument()).ToList().Select<MONGODeviceReading,ICommonDocument>(x=>(ICommonDocument)x).ToList();
+                return collection.Find(Builders<MONGODeviceReading>.Filter.Eq("Unit", "Fahrenheit")).ToList().Select<MONGODeviceReading,ICommonDocument>(x=>(ICommonDocument)x).ToList();
             }
             catch (MongoConnectionException)
             {
@@ -150,9 +151,11 @@ namespace CosmosDbCRUD
             await collection.DeleteOneAsync(Builders<MONGODeviceReading>.Filter.Eq("_id", documentId));
         }
 
-        public Task<ICommonDocument> ReadItem(string documentId)
+        public async Task<ICommonDocument> ReadItem(string documentId)
         {
-            throw new NotImplementedException();
+            var collection = GetTasksCollectionForEdit();
+            var filterResult = await collection.FindAsync(Builders<MONGODeviceReading>.Filter.Eq("_id", documentId));
+            return await filterResult.SingleAsync();
         }
 
         public List<ICommonDocument> ReadItemCollectionInPartition()
@@ -165,9 +168,14 @@ namespace CosmosDbCRUD
             throw new NotImplementedException();
         }
 
-        public Task UpdateItem(ICommonDocument reading, string documentId)
+        public async Task UpdateItem(ICommonDocument reading)
         {
-            throw new NotImplementedException();
+            var update = new UpdateDefinitionBuilder<MONGODeviceReading>()
+                .Set(s => s.MetricValue, (double)500)
+                .Set(s => s.ReadingTime, DateTime.UtcNow);
+
+            var collection = GetTasksCollectionForEdit();
+            await collection.FindOneAndUpdateAsync(Builders<MONGODeviceReading>.Filter.Eq("_id", reading.Id), update);
         }
     }
 }
