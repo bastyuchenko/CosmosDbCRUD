@@ -15,7 +15,7 @@ namespace CosmosDbCRUD
         [BsonId]
         public string Id { get; set; }
 
-        [BsonElement("DeviceId")]
+        [BsonElement("deviceId")]
         public string DeviceId { get; set; }
 
         [BsonElement("ReadingTime")]

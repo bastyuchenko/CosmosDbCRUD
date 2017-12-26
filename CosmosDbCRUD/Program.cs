@@ -47,20 +47,30 @@ namespace CosmosDbCRUD
 
         private static async Task MongoApiRun()
         {
+            ///////////////////////////////
+            ////***** to create a collection with partition key you should create sharded collection *****///
+            // download MongoDB comunity and install it 
+            // run cmd
+            // connect to azure cosmos db using the command from "Quick start"->"Mongo DB shell"
+            // db.runCommand( { shardCollection: "Tasks.coll", key: { deviceId: "hashed" } } )
+            // where db.runCommand( { shardCollection: "<database name>.<collection name>", key: { <partition key-field-column name>: "hashed" } } )
+            ////////////////////////////////
+
             using (ICommonApi sqlApi = new MongoAPI())
             {
                 ////await sqlApi.CreateDatabase();
                 ////await sqlApi.CreateCollection();
-                await sqlApi.CreateItems();
-                ICommonDocument doc = await sqlApi.ReadItem("XMS-001-FE24C");
-                Console.WriteLine(doc.MetricValue);
+                //await sqlApi.CreateItems();
+                
 
                 var result = sqlApi.ReadItemCollection();
 
                 foreach (var item in result)
                 {
                     Console.WriteLine($"Update {item.Id}");
-                    await sqlApi.DeleteItem(item.Id, item.DeviceId);
+                    await sqlApi.UpdateItem(item);
+                    ICommonDocument doc = await sqlApi.ReadItem(item.Id);
+                    Console.WriteLine(doc.MetricValue);
                 }
 
                 foreach (var item in result)

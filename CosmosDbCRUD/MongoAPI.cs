@@ -18,19 +18,18 @@ namespace CosmosDbCRUD
         // or IP address of your server.
         //For example, "mongodb://testlinux.cloudapp.net
         private string connectionString = "mongodb://6df6b9fc-0ee0-4-231-b9ee:HD08kALPSugIrqfPy6C5qNWrL6gtVyWs3N4xnfyF5Tg8XX0O0uOBvwkR8TZWXJphKks4b1sYrXqyYha3HodW7g==@6df6b9fc-0ee0-4-231-b9ee.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
-        private string userName = "6df6b9fc-0ee0-4-231-b9ee";
-        private string host = "6df6b9fc-0ee0-4-231-b9ee.documents.azure.com";
-        private string password = "HD08kALPSugIrqfPy6C5qNWrL6gtVyWs3N4xnfyF5Tg8XX0O0uOBvwkR8TZWXJphKks4b1sYrXqyYha3HodW7g==";
         // This sample uses a database named "Tasks" and a
         //collection named "TasksList". The database and collection
         //will be automatically created if they don't already exist.
         private string dbName = "Tasks";
-        private string collectionName = "TasksList";
+        private string collectionName = "coll";
         private const string PartitionValue1 = "XMS-0001";
         private const string PartitionValue2 = "XMS-0002";
+        private MongoClientSettings settings;
         // Default constructor.
         public MongoAPI()
         {
+            settings = MongoClientSettings.FromUrl(new MongoUrl(connectionString));
         }
         // Gets all Task items from the MongoDB server.
         public List<ICommonDocument> ReadItemCollection()
@@ -39,7 +38,7 @@ namespace CosmosDbCRUD
             {
                 var collection = GetTasksCollection();
                 //return collection.Find(new BsonDocument()).ToList().Select<MONGODeviceReading,ICommonDocument>(x=>(ICommonDocument)x).ToList();
-                return collection.Find(Builders<MONGODeviceReading>.Filter.Eq("Unit", "Fahrenheit")).ToList().Select<MONGODeviceReading,ICommonDocument>(x=>(ICommonDocument)x).ToList();
+                return collection.Find(Builders<MONGODeviceReading>.Filter.Eq("Unit", "Fahrenheit")).ToList().Select<MONGODeviceReading, ICommonDocument>(x => (ICommonDocument)x).ToList();
             }
             catch (MongoConnectionException)
             {
@@ -49,10 +48,10 @@ namespace CosmosDbCRUD
         // Creates a Task and inserts it into the collection in MongoDB.
         public async Task CreateItems()
         {
-            var collection = GetTasksCollectionForEdit();
+            var collection = GetTasksCollection();
             try
             {
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 100; i++)
                 {
                     await collection.InsertOneAsync(new MONGODeviceReading
                     {
@@ -65,7 +64,7 @@ namespace CosmosDbCRUD
                     });
                 }
 
-                for (int i = 0; i < 8; i++)
+                for (int i = 0; i < 80; i++)
                 {
                     await collection.InsertOneAsync(new MONGODeviceReading
                     {
@@ -78,7 +77,7 @@ namespace CosmosDbCRUD
                     });
                 }
 
-                
+
             }
             catch (MongoCommandException ex)
             {
@@ -88,30 +87,6 @@ namespace CosmosDbCRUD
 
         private IMongoCollection<MONGODeviceReading> GetTasksCollection()
         {
-            MongoClientSettings settings = new MongoClientSettings();
-            settings.Server = new MongoServerAddress(host, 10255);
-            settings.UseSsl = true;
-            settings.SslSettings = new SslSettings();
-            settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
-            MongoIdentity identity = new MongoInternalIdentity(dbName, userName);
-            MongoIdentityEvidence evidence = new PasswordEvidence(password);
-            settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
-            MongoClient client = new MongoClient(settings);
-            var database = client.GetDatabase(dbName);
-            var todoTaskCollection = database.GetCollection<MONGODeviceReading>(collectionName);
-            return todoTaskCollection;
-        }
-
-        private IMongoCollection<MONGODeviceReading> GetTasksCollectionForEdit()
-        {
-            MongoClientSettings settings = new MongoClientSettings();
-            settings.Server = new MongoServerAddress(host, 10255);
-            settings.UseSsl = true;
-            settings.SslSettings = new SslSettings();
-            settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
-            MongoIdentity identity = new MongoInternalIdentity(dbName, userName);
-            MongoIdentityEvidence evidence = new PasswordEvidence(password);
-            settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
             MongoClient client = new MongoClient(settings);
             var database = client.GetDatabase(dbName);
             var todoTaskCollection = database.GetCollection<MONGODeviceReading>(collectionName);
@@ -147,13 +122,16 @@ namespace CosmosDbCRUD
 
         public async Task DeleteItem(string documentId, object partitionValue)
         {
-            var collection = GetTasksCollectionForEdit();
-            await collection.DeleteOneAsync(Builders<MONGODeviceReading>.Filter.Eq("_id", documentId));
+            var collection = GetTasksCollection();
+            await collection.DeleteOneAsync(Builders<MONGODeviceReading>.Filter.And(
+                            Builders<MONGODeviceReading>.Filter.Eq("_id", documentId),
+                            Builders<MONGODeviceReading>.Filter.Eq("deviceId", partitionValue)
+                            ));
         }
 
         public async Task<ICommonDocument> ReadItem(string documentId)
         {
-            var collection = GetTasksCollectionForEdit();
+            var collection = GetTasksCollection();
             var filterResult = await collection.FindAsync(Builders<MONGODeviceReading>.Filter.Eq("_id", documentId));
             return await filterResult.SingleAsync();
         }
@@ -174,8 +152,11 @@ namespace CosmosDbCRUD
                 .Set(s => s.MetricValue, (double)500)
                 .Set(s => s.ReadingTime, DateTime.UtcNow);
 
-            var collection = GetTasksCollectionForEdit();
-            await collection.FindOneAndUpdateAsync(Builders<MONGODeviceReading>.Filter.Eq("_id", reading.Id), update);
+            var collection = GetTasksCollection();
+            await collection.FindOneAndUpdateAsync(Builders<MONGODeviceReading>.Filter.And(
+                            Builders<MONGODeviceReading>.Filter.Eq("_id", reading.Id),
+                            Builders<MONGODeviceReading>.Filter.Eq("deviceId", reading.DeviceId)
+                            ),update);
         }
     }
 }
