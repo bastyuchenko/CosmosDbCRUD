@@ -16,12 +16,13 @@ namespace CosmosDbCRUD
         static void Main(string[] args)
         {
             //SQLApiRun().GetAwaiter().GetResult();
-            MongoApiRun().GetAwaiter().GetResult();
+            //MongoApiRun().GetAwaiter().GetResult();
+            TableAPIRun().GetAwaiter().GetResult();
         }
 
         private static async Task SQLApiRun()
         {
-            using (ICommonApi sqlApi = new PartitionsSQLApi())
+            using (ICommonApi sqlApi = new SQLAPI())
             {
                 await sqlApi.CreateDatabase();
                 await sqlApi.CreateCollection();
@@ -77,6 +78,30 @@ namespace CosmosDbCRUD
                 {
                     Console.WriteLine($"Delete {item.Id}");
                     await sqlApi.DeleteItem(item.Id, item.DeviceId);
+                }
+            }
+        }
+
+        private static async Task TableAPIRun()
+        {
+            using (TableAPI sqlApi = new TableAPI())
+            {
+                await sqlApi.CreateCollection();
+                await sqlApi.CreateItems();
+                var result = sqlApi.ReadItemCollection();
+
+                foreach (var item in result)
+                {
+                    Console.WriteLine($"Update {item.RowKey}");
+                    await sqlApi.UpdateItem(item);
+                    var doc = await sqlApi.ReadItem(item.RowKey, item.PartitionKey);
+                    Console.WriteLine(doc.MetricValue);
+                }
+
+                foreach (var item in result)
+                {
+                    Console.WriteLine($"Delete {item.RowKey}");
+                    await sqlApi.DeleteItem(item.RowKey, item.PartitionKey);
                 }
             }
         }

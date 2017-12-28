@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace CosmosDbCRUD
 {
-    public class PartitionsSQLApi : ICommonApi
+    public class SQLAPI : ICommonApi
     {
         private const string EndpointUrl = "https://micro-cosm.documents.azure.com:443/";
         private const string PrimaryKey = "X8dqnF4znVCS4XwWt5wkSLIXKb64lJmGf646h6Df5eOMVfT7kUfZGo7d0hQk7gYsmK4cZzvFKIVMIMF99MT57Q==";
@@ -21,7 +21,7 @@ namespace CosmosDbCRUD
         private const string PartitionValue2 = "XMS-0002";
 
 
-        public PartitionsSQLApi()
+        public SQLAPI()
         {
             client = new DocumentClient(new Uri(EndpointUrl), PrimaryKey);
         }
